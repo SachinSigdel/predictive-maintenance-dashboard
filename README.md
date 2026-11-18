@@ -4,6 +4,8 @@ EngineSight forecasts the **remaining useful life (RUL)** of turbofan engines fr
 
 It's a Streamlit web app built around a Random Forest model trained on NASA's **C-MAPSS FD001** run-to-failure dataset.
 
+**Live demo: [enginesight.streamlit.app](https://enginesight.streamlit.app)**
+
 ## Features
 
 - **Fleet Dashboard:** every engine is scored and ranked, with:
