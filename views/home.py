@@ -1,11 +1,13 @@
 import streamlit as st
 
 from core import RISK, sample_accuracy, sample_fleet_predictions
-from ui import html, feature_card
+from ui import engine_background, feature_card, html
 
 fleet = sample_fleet_predictions()
 accuracy = sample_accuracy()
 counts = fleet["risk_level"].value_counts()
+
+engine_background()
 
 # ---- Hero ----
 left, right = st.columns([1.1, 1], gap="large", vertical_alignment="center")
@@ -64,9 +66,9 @@ c1, c2, c3 = st.columns(3)
 feature_card(c1, "🛩️", "Fleet triage",
              "Every engine ranked by urgency, with a clear risk tier and a recommended action.")
 feature_card(c2, "🔍", "Engine deep-dive",
-             "Open any engine to see its forecast and the sensor trends behind it.", "#f5f3ff")
+             "Open any engine to see its forecast and the sensor trends behind it.", "rgba(139,92,246,.16)")
 feature_card(c3, "📤", "Bring your own data",
-             "Upload a C-MAPSS fleet file or paste one engine's readings. Results are instant.", "#ecfdf5")
+             "Upload a C-MAPSS fleet file or paste one engine's readings. Results are instant.", "rgba(74,222,128,.13)")
 
 # ---- How it works ----
 html('<div class="es-section-title">How it works</div>'

@@ -44,7 +44,7 @@ with right:
                   "Medium": "31 – 60 cycles", "Low": "60+ cycles"}
         html("".join(
             f'<div class="es-tier"><div class="rng">{badge(r)}<div style="margin-top:.35rem">{ranges[r]}</div></div>'
-            f'<div class="txt"><b style="color:#0f172a">{RISK[r]["headline"]}.</b> {RISK[r]["action"]}</div></div>'
+            f'<div class="txt"><b>{RISK[r]["headline"]}.</b> {RISK[r]["action"]}</div></div>'
             for r in RISK_ORDER
         ))
 

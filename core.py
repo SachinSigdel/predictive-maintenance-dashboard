@@ -44,13 +44,13 @@ KEY_SENSORS = ["sensor_4", "sensor_11", "sensor_12", "sensor_7"]
 
 # name, upper RUL bound, colour, tint, headline, recommended action
 RISK_LEVELS = [
-    ("Critical", 15, "#dc2626", "#fee2e2", "Ground for inspection",
+    ("Critical", 15, "#f87171", "rgba(248,113,113,0.15)", "Ground for inspection",
      "Expected to reach end of life within ~15 cycles. Schedule maintenance immediately."),
-    ("High", 30, "#ea580c", "#ffedd5", "Plan maintenance soon",
+    ("High", 30, "#fb923c", "rgba(251,146,60,0.15)", "Plan maintenance soon",
      "Book a maintenance slot within the next 15 cycles."),
-    ("Medium", 60, "#ca8a04", "#fef9c3", "Monitor closely",
+    ("Medium", 60, "#facc15", "rgba(250,204,21,0.13)", "Monitor closely",
      "Include this engine in the next planned maintenance window."),
-    ("Low", float("inf"), "#16a34a", "#dcfce7", "Healthy",
+    ("Low", float("inf"), "#4ade80", "rgba(74,222,128,0.13)", "Healthy",
      "No action needed. Keep monitoring as new cycles arrive."),
 ]
 RISK_ORDER = [r[0] for r in RISK_LEVELS]

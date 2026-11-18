@@ -42,8 +42,8 @@ with left:
             upload = st.file_uploader("Engine file (.csv or .txt)", type=["csv", "txt"])
 
         with st.expander("Which sensors, in what order?"):
-            html("<ol style='margin:0;padding-left:1.2rem;color:#475569;font-size:.9rem'>" +
-                 "".join(f"<li>{SENSOR_LABELS.get(s, s)} <span style='color:#94a3b8'>({s})</span></li>"
+            html("<ol class='es-list'>" +
+                 "".join(f"<li>{SENSOR_LABELS.get(s, s)} <span>({s})</span></li>"
                          for s in sensors) + "</ol>")
             st.caption("Full 26-column C-MAPSS rows are accepted too.")
 
