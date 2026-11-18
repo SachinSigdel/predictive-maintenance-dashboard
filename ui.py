@@ -174,30 +174,43 @@ h1, h2, h3 {letter-spacing: -0.02em; color: var(--ink);}
   justify-content:space-between; flex-wrap:wrap; gap:.6rem; color:var(--faint); font-size:.85rem;}
 .es-footer b {color:var(--ink);}
 
-/* ---- Animated engine background (home page) ---- */
+/* ---- Animated engine background (home page) ----
+   Each part is its own layer animated with CSS transforms, so the browser
+   composites it on the GPU instead of repainting an SVG every frame. */
 .es-bg {position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden;}
-.es-bg .engine {position:absolute; right:-9vw; top:50%; width:min(70vw, 900px); aspect-ratio:1;
-  transform:translateY(-46%); opacity:.42;
-  -webkit-mask-image: radial-gradient(circle, #000 55%, transparent 72%);
-          mask-image: radial-gradient(circle, #000 55%, transparent 72%);}
-.es-bg .engine {background: var(--engine-svg) center / contain no-repeat;}
-.es-bg .fade {position:absolute; inset:0;
-  background: linear-gradient(90deg, var(--bg) 0%, rgba(7,11,22,.88) 32%, rgba(7,11,22,.25) 62%, rgba(7,11,22,0) 100%);}
-.es-bg .streak {position:absolute; left:0; height:1px; width:22vw; opacity:0;
-  background: linear-gradient(90deg, transparent, rgba(96,165,250,.75), transparent);
-  animation: es-flow linear infinite;}
-.es-bg .grid {position:absolute; inset:0; opacity:.35;
+.es-bg .engine {position:absolute; left:50%; top:50%; width:min(82vmin, 860px); aspect-ratio:1;
+  transform:translate(-50%, -50%); opacity:.2;}
+.es-bg .layer {position:absolute; inset:0; background:center / contain no-repeat;
+  will-change:transform; backface-visibility:hidden;}
+.es-bg .casing {background-image:var(--es-casing); will-change:auto;}
+.es-bg .stator {background-image:var(--es-stator); animation: es-spin 120s linear infinite reverse;}
+.es-bg .fan {background-image:var(--es-fan); animation: es-spin 8s linear infinite;}
+.es-bg .glow {inset:-8%; border-radius:50%; will-change:opacity;
+  background: radial-gradient(circle, rgba(59,130,246,.55) 0%, rgba(29,78,216,.14) 45%, transparent 70%);
+  animation: es-breathe 9s ease-in-out infinite;}
+.es-bg .ring {inset:5%; border-radius:50%; border:2px solid rgba(96,165,250,.8); opacity:0;
+  will-change:transform, opacity; animation: es-ripple 9s cubic-bezier(.25,.6,.35,1) infinite;}
+.es-bg .ring.r2 {animation-delay:-4.5s; border-color:rgba(167,139,250,.7);}
+.es-bg .vignette {position:absolute; inset:0;
+  background: radial-gradient(ellipse at center, rgba(7,11,22,.1) 0%, rgba(7,11,22,.5) 50%, var(--bg) 85%);}
+.es-bg .streak {position:absolute; left:0; height:1px; width:28vw; opacity:0; will-change:transform, opacity;
+  background: linear-gradient(90deg, transparent, rgba(96,165,250,.5), transparent);
+  animation: es-flow ease-in-out infinite;}
+.es-bg .grid {position:absolute; inset:0; opacity:.3;
   background-image: radial-gradient(rgba(148,163,184,.18) 1px, transparent 1px); background-size: 28px 28px;
-  -webkit-mask-image: radial-gradient(ellipse at 70% 40%, #000 10%, transparent 65%);
-          mask-image: radial-gradient(ellipse at 70% 40%, #000 10%, transparent 65%);}
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 10%, transparent 60%);
+          mask-image: radial-gradient(ellipse at center, #000 10%, transparent 60%);}
 
+@keyframes es-spin {from {transform: rotate(0deg);} to {transform: rotate(360deg);}}
+@keyframes es-breathe {0%, 100% {opacity:.5;} 50% {opacity:1;}}
+@keyframes es-ripple {0% {transform: scale(.92); opacity:0;} 12% {opacity:.6;}
+  100% {transform: scale(1.3); opacity:0;}}
 @keyframes es-blink {0%,100% {opacity:1;} 50% {opacity:.35;}}
-@keyframes es-flow {0% {transform: translateX(-25vw); opacity:0;} 15% {opacity:1;} 85% {opacity:1;}
+@keyframes es-flow {0% {transform: translateX(-30vw); opacity:0;} 20% {opacity:.8;} 80% {opacity:.8;}
   100% {transform: translateX(110vw); opacity:0;}}
 
 @media (max-width: 760px) {
-  .es-bg .engine {right:auto; left:50%; top:22%; width:120vw; transform:translate(-50%, -30%); opacity:.3;}
-  .es-bg .fade {background: linear-gradient(180deg, rgba(7,11,22,.35), rgba(7,11,22,.9) 60%, var(--bg));}
+  .es-bg .engine {width:115vw; top:40%; opacity:.16;}
 }
 @media (prefers-reduced-motion: reduce) {
   .es-bg *, .es-dot, .es-preview .live i {animation: none !important;}
@@ -217,81 +230,70 @@ def html(markup):
 # -----------------------------
 # Animated engine background
 # -----------------------------
-def _engine_svg():
+_SVG_DEFS = """
+  <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#93c5fd"/><stop offset=".5" stop-color="#3b82f6"/>
+    <stop offset="1" stop-color="#6d28d9"/>
+  </linearGradient>
+  <linearGradient id="blade" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0" stop-color="#1e3a8a"/><stop offset="1" stop-color="#60a5fa"/>
+  </linearGradient>
+  <radialGradient id="hub" cx="40%" cy="35%" r="70%">
+    <stop offset="0" stop-color="#e2e8f0"/><stop offset=".35" stop-color="#64748b"/>
+    <stop offset="1" stop-color="#0f172a"/>
+  </radialGradient>"""
+
+
+def _svg(body):
+    return (f'<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">'
+            f'<defs>{_SVG_DEFS}</defs>{body}</svg>')
+
+
+def _engine_layers():
+    """Static SVG layers of a turbofan seen from the front."""
     cx = cy = 300
-    blade = ("M -9 -66 C -6 -122, 12 -182, 40 -236 "
-             "L 68 -226 C 40 -174, 22 -120, 12 -64 Z")
-    blades = "".join(f'<path d="{blade}" transform="rotate({i * 360 / 22:.2f})"/>' for i in range(22))
+    casing = _svg(
+        '<circle cx="300" cy="300" r="272" fill="#050913" stroke="url(#ring)" stroke-width="10"/>'
+        '<circle cx="300" cy="300" r="246" fill="none" stroke="#1e3a8a" stroke-width="2"/>'
+    )
     vanes = "".join(
         f'<line x1="{cx + 250 * math.cos(a):.1f}" y1="{cy + 250 * math.sin(a):.1f}" '
         f'x2="{cx + 268 * math.cos(a):.1f}" y2="{cy + 268 * math.sin(a):.1f}"/>'
         for a in (i * 2 * math.pi / 60 for i in range(60))
     )
-    return f'''
-<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    .fan, .stator, .pulse {{transform-box: view-box; transform-origin: 300px 300px;}}
-    .fan {{animation: spin 2.4s linear infinite;}}
-    .fan.blur {{animation-delay: -.08s; opacity: .35;}}
-    .stator {{animation: spin 40s linear infinite reverse;}}
-    .pulse {{animation: pulse 4s ease-out infinite;}}
-    .pulse.p2 {{animation-delay: 2s;}}
-    .glow {{animation: breathe 5s ease-in-out infinite;}}
-    @keyframes spin {{to {{transform: rotate(360deg);}}}}
-    @keyframes pulse {{0% {{transform: scale(.82); opacity: .55;}} 100% {{transform: scale(1.18); opacity: 0;}}}}
-    @keyframes breathe {{0%, 100% {{opacity: .55;}} 50% {{opacity: 1;}}}}
-    @media (prefers-reduced-motion: reduce) {{* {{animation: none !important;}}}}
-  </style>
-  <defs>
-    <radialGradient id="esGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0" stop-color="#3b82f6" stop-opacity=".55"/>
-      <stop offset=".6" stop-color="#1d4ed8" stop-opacity=".12"/>
-      <stop offset="1" stop-color="#1d4ed8" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="esRing" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#93c5fd"/><stop offset=".5" stop-color="#3b82f6"/>
-      <stop offset="1" stop-color="#6d28d9"/>
-    </linearGradient>
-    <linearGradient id="esBlade" x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0" stop-color="#1e3a8a"/><stop offset="1" stop-color="#60a5fa"/>
-    </linearGradient>
-    <radialGradient id="esHub" cx="40%" cy="35%" r="70%">
-      <stop offset="0" stop-color="#e2e8f0"/><stop offset=".35" stop-color="#64748b"/>
-      <stop offset="1" stop-color="#0f172a"/>
-    </radialGradient>
-  </defs>
-  <circle class="glow" cx="300" cy="300" r="300" fill="url(#esGlow)"/>
-  <circle class="pulse" cx="300" cy="300" r="276" fill="none" stroke="#60a5fa" stroke-width="1.5"/>
-  <circle class="pulse p2" cx="300" cy="300" r="276" fill="none" stroke="#a78bfa" stroke-width="1.2"/>
-  <circle cx="300" cy="300" r="272" fill="#050913" stroke="url(#esRing)" stroke-width="10"/>
-  <g class="stator" stroke="#334155" stroke-width="2">{vanes}</g>
-  <circle cx="300" cy="300" r="246" fill="none" stroke="#1e3a8a" stroke-width="2"/>
-  <g class="fan blur" transform="translate(300 300)">
-    <g fill="#3b82f6" opacity=".5">{blades}</g>
-  </g>
-  <g class="fan">
-    <g transform="translate(300 300)" fill="url(#esBlade)" stroke="#93c5fd" stroke-opacity=".55" stroke-width="1">
-      {blades}
-    </g>
-    <circle cx="300" cy="300" r="66" fill="url(#esHub)" stroke="#94a3b8" stroke-opacity=".5" stroke-width="2"/>
-    <path d="M300 300 C 318 296, 332 280, 330 258 M300 300 C 284 306, 272 322, 274 342"
-          stroke="#f8fafc" stroke-width="5" stroke-linecap="round" fill="none" opacity=".85"/>
-  </g>
-  <circle cx="300" cy="300" r="8" fill="#0f172a"/>
-</svg>'''
+    stator = _svg(f'<g stroke="#475569" stroke-width="2">{vanes}</g>')
+
+    blade = "M -9 -66 C -6 -122, 12 -182, 40 -236 L 68 -226 C 40 -174, 22 -120, 12 -64 Z"
+    blades = "".join(f'<path d="{blade}" transform="rotate({i * 360 / 22:.2f})"/>' for i in range(22))
+    fan = _svg(
+        f'<g transform="translate(300 300)" fill="url(#blade)" stroke="#93c5fd" '
+        f'stroke-opacity=".55" stroke-width="1">{blades}</g>'
+        '<circle cx="300" cy="300" r="66" fill="url(#hub)" stroke="#94a3b8" stroke-opacity=".5" stroke-width="2"/>'
+        '<path d="M300 300 C 318 296, 332 280, 330 258 M300 300 C 284 306, 272 322, 274 342" '
+        'stroke="#f8fafc" stroke-width="5" stroke-linecap="round" fill="none" opacity=".85"/>'
+        '<circle cx="300" cy="300" r="8" fill="#0f172a"/>'
+    )
+    return {"casing": casing, "stator": stator, "fan": fan}
+
+
+def _data_uri(svg):
+    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
 
 
 def engine_background():
+    layers = _engine_layers()
+    variables = "".join(f'--es-{name}: url("{_data_uri(svg)}");' for name, svg in layers.items())
     streaks = "".join(
         f'<div class="streak" style="top:{top}%;animation-duration:{dur}s;animation-delay:{delay}s"></div>'
-        for top, dur, delay in [(14, 3.8, 0), (23, 5.2, 1.4), (31, 4.4, 2.6), (42, 3.4, .7),
-                                (49, 6.0, 3.1), (58, 4.0, 1.9), (66, 5.4, .3), (77, 4.6, 2.2),
-                                (85, 3.6, 3.6)]
+        for top, dur, delay in [(18, 9, 0), (29, 11, -4), (41, 8.5, -2), (53, 10, -7),
+                                (64, 9.5, -5), (76, 12, -1), (86, 10.5, -8)]
     )
-    svg = base64.b64encode(_engine_svg().encode()).decode()
-    html(f'<style>:root {{--engine-svg: url("data:image/svg+xml;base64,{svg}");}}</style>'
-         f'<div class="es-bg"><div class="grid"></div><div class="engine"></div>'
-         f'{streaks}<div class="fade"></div></div>')
+    html(f'<style>:root {{{variables}}}</style>'
+         '<div class="es-bg"><div class="grid"></div>'
+         '<div class="engine">'
+         '<div class="layer glow"></div><div class="layer ring"></div><div class="layer ring r2"></div>'
+         '<div class="layer casing"></div><div class="layer stator"></div><div class="layer fan"></div>'
+         f'</div>{streaks}<div class="vignette"></div></div>')
 
 
 # -----------------------------
